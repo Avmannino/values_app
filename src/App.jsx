@@ -1,25 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
+  ArrowLeft,
   ArrowRight,
+  Check,
   CheckCircle2,
   Download,
-  MinusCircle,
   Plus,
   Printer,
   RefreshCcw,
@@ -28,31 +13,401 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { starterValues } from "./data/values";
 
-const STORAGE_KEY = "values-sort-exercise-v1";
+const STORAGE_KEY = "values-sort-exercise-v7";
 
-function createValueItem(label) {
+const valueDeck = [
+  {
+    label: "Acceptance",
+    description: "to be accepted as I am",
+  },
+  {
+    label: "Accuracy",
+    description: "to be accurate in my opinions and beliefs",
+  },
+  {
+    label: "Achievement",
+    description: "to have important accomplishments",
+  },
+  {
+    label: "Adventure",
+    description: "to have new and exciting experiences",
+  },
+  {
+    label: "Attractiveness",
+    description: "to be physically attractive",
+  },
+  {
+    label: "Authority",
+    description: "to be in charge of and responsible for others",
+  },
+  {
+    label: "Autonomy",
+    description: "to be self-determined and independent",
+  },
+  {
+    label: "Beauty",
+    description: "to appreciate beauty around me",
+  },
+  {
+    label: "Caring",
+    description: "to take care of others",
+  },
+  {
+    label: "Challenge",
+    description: "to take on difficult tasks and problems",
+  },
+  {
+    label: "Change",
+    description: "to have a life full of change and variety",
+  },
+  {
+    label: "Comfort",
+    description: "to have a pleasant and comfortable life",
+  },
+  {
+    label: "Commitment",
+    description: "to make enduring, meaningful commitments",
+  },
+  {
+    label: "Compassion",
+    description: "to feel and act on concern for others",
+  },
+  {
+    label: "Connection",
+    description: "to feel connected to others",
+  },
+  {
+    label: "Contribution",
+    description: "to make a lasting contribution in the world",
+  },
+  {
+    label: "Cooperation",
+    description: "to work collaboratively with others",
+  },
+  {
+    label: "Courtesy",
+    description: "to be considerate and polite toward others",
+  },
+  {
+    label: "Creativity",
+    description: "to have new and original ideas",
+  },
+  {
+    label: "Dependability",
+    description: "to be reliable and trustworthy",
+  },
+  {
+    label: "Duty",
+    description: "to carry out my duties and obligations",
+  },
+  {
+    label: "Ecology",
+    description: "to live in harmony with the environment",
+  },
+  {
+    label: "Excitement",
+    description: "to have a life full of thrills and stimulation",
+  },
+  {
+    label: "Faithfulness",
+    description: "to be loyal and true in relationships",
+  },
+  {
+    label: "Fame",
+    description: "to be known and recognized",
+  },
+  {
+    label: "Family",
+    description: "to have a happy, loving family",
+  },
+  {
+    label: "Fitness",
+    description: "to be physically fit and strong",
+  },
+  {
+    label: "Flexibility",
+    description: "to adjust to new circumstances easily",
+  },
+  {
+    label: "Forgiveness",
+    description: "to be forgiving of others",
+  },
+  {
+    label: "Freedom",
+    description: "to be free from restrictions and limitations",
+  },
+  {
+    label: "Friendship",
+    description: "to have close, supportive friends",
+  },
+  {
+    label: "Fun",
+    description: "to play and have fun",
+  },
+  {
+    label: "Generosity",
+    description: "to give what I have to others",
+  },
+  {
+    label: "Genuineness",
+    description: "to act in a manner that is true to who I am",
+  },
+  {
+    label: "God's Will",
+    description: "to seek and obey the will of God",
+  },
+  {
+    label: "Growth",
+    description: "to keep changing and growing",
+  },
+  {
+    label: "Health",
+    description: "to be physically well and healthy",
+  },
+  {
+    label: "Helpfulness",
+    description: "to be helpful to others",
+  },
+  {
+    label: "Honesty",
+    description: "to be honest and truthful",
+  },
+  {
+    label: "Hope",
+    description: "to maintain a positive and optimistic outlook",
+  },
+  {
+    label: "Humility",
+    description: "to be modest and unassuming",
+  },
+  {
+    label: "Humor",
+    description: "to see the humorous side of myself and the world",
+  },
+  {
+    label: "Independence",
+    description: "to be free from depending on others",
+  },
+  {
+    label: "Industry",
+    description: "to work hard and well at my life tasks",
+  },
+  {
+    label: "Inner Peace",
+    description: "to experience personal peace",
+  },
+  {
+    label: "Intimacy",
+    description: "to share my innermost experiences with others",
+  },
+  {
+    label: "Justice",
+    description: "to promote fair and equal treatment for all",
+  },
+  {
+    label: "Knowledge",
+    description: "to learn and contribute valuable knowledge",
+  },
+  {
+    label: "Leisure",
+    description: "to take time to relax and enjoy",
+  },
+  {
+    label: "Loved",
+    description: "to be loved by those close to me",
+  },
+  {
+    label: "Loving",
+    description: "to give love to others",
+  },
+  {
+    label: "Mastery",
+    description: "to be competent in my everyday activities",
+  },
+  {
+    label: "Mindfulness",
+    description: "to live conscious and mindful of the present moment",
+  },
+  {
+    label: "Moderation",
+    description: "to avoid excesses and find a middle ground",
+  },
+  {
+    label: "Monogamy",
+    description: "to have one close, loving relationship",
+  },
+  {
+    label: "Nonconformity",
+    description: "to question and challenge authority and norms",
+  },
+  {
+    label: "Nurturance",
+    description: "to encourage and support others",
+  },
+  {
+    label: "Openness",
+    description: "to be open to new experiences, ideas, and options",
+  },
+  {
+    label: "Order",
+    description: "to have a life that is well-ordered and organized",
+  },
+  {
+    label: "Passion",
+    description: "to have deep feelings about ideas, activities, or people",
+  },
+  {
+    label: "Pleasure",
+    description: "to feel good",
+  },
+  {
+    label: "Popularity",
+    description: "to be well-liked by many people",
+  },
+  {
+    label: "Power",
+    description: "to have control over others",
+  },
+  {
+    label: "Purpose",
+    description: "to have meaning and direction in my life",
+  },
+  {
+    label: "Rationality",
+    description: "to be guided by reason and logic",
+  },
+  {
+    label: "Realism",
+    description: "to see and act realistically and practically",
+  },
+  {
+    label: "Responsibility",
+    description: "to make and carry out responsible decisions",
+  },
+  {
+    label: "Risk",
+    description: "to take risks and chances",
+  },
+  {
+    label: "Romance",
+    description: "to have intense, exciting love in my life",
+  },
+  {
+    label: "Safety",
+    description: "to be safe and secure",
+  },
+  {
+    label: "Self-Acceptance",
+    description: "to accept myself as I am",
+  },
+  {
+    label: "Self-Control",
+    description: "to be disciplined in my own actions",
+  },
+  {
+    label: "Self-Esteem",
+    description: "to feel good about myself",
+  },
+  {
+    label: "Self-Knowledge",
+    description: "to have a deep and honest understanding of myself",
+  },
+  {
+    label: "Service",
+    description: "to be of service to others",
+  },
+  {
+    label: "Sexuality",
+    description: "to have an active and satisfying sex life",
+  },
+  {
+    label: "Simplicity",
+    description: "to live life simply, with minimal needs",
+  },
+  {
+    label: "Solitude",
+    description: "to have time and space where I can be apart from others",
+  },
+  {
+    label: "Spirituality",
+    description: "to grow and mature spiritually",
+  },
+  {
+    label: "Stability",
+    description: "to have a life that stays fairly consistent",
+  },
+  {
+    label: "Tolerance",
+    description: "to accept and respect those who differ from me",
+  },
+  {
+    label: "Tradition",
+    description: "to follow respected patterns of the past",
+  },
+  {
+    label: "Virtue",
+    description: "to live a morally pure and excellent life",
+  },
+  {
+    label: "Wealth",
+    description: "to have plenty of money",
+  },
+  {
+    label: "World Peace",
+    description: "to work to promote peace in the world",
+  },
+];
+
+function shuffleArray(array) {
+  return [...array]
+    .map((item) => ({ item, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ item }) => item);
+}
+
+function createValueItem(value) {
+  const label = typeof value === "string" ? value : value.label;
+  const description =
+    typeof value === "string"
+      ? "A custom value you added to the deck."
+      : value.description;
+
   return {
-    id: crypto.randomUUID(),
+    id:
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${label}-${Date.now()}-${Math.random()}`,
     label,
+    description,
   };
 }
 
-const initialColumns = {
-  available: starterValues.map((value) => createValueItem(value)),
-  notImportant: [],
-  somewhatImportant: [],
-  important: [],
-  veryImportant: [],
-  top10: [],
-  top5: [],
-};
+function getValueLengthClass(label) {
+  const length = label.length;
+
+  if (length >= 26) return "value-title-xxl-long";
+  if (length >= 21) return "value-title-xl-long";
+  if (length >= 16) return "value-title-long";
+  if (length >= 11) return "value-title-medium";
+
+  return "value-title-short";
+}
+
+function createInitialColumns() {
+  return {
+    available: shuffleArray(valueDeck).map((value) => createValueItem(value)),
+    notImportant: [],
+    somewhatImportant: [],
+    important: [],
+    veryImportant: [],
+  };
+}
 
 const columnMeta = {
   available: {
-    title: "Value Bank",
-    description: "Start here. Drag values into a category.",
+    title: "Value Deck",
+    description: "Review each value one at a time.",
   },
   notImportant: {
     title: "Not Important",
@@ -70,16 +425,6 @@ const columnMeta = {
     title: "Very Important",
     description: "Values that feel essential to who you are.",
   },
-  top10: {
-    title: "Top 10",
-    description: "Choose up to 10 values that matter most.",
-    limit: 10,
-  },
-  top5: {
-    title: "Top 5 Core Values",
-    description: "Choose your final 5 core values.",
-    limit: 5,
-  },
 };
 
 const steps = [
@@ -88,24 +433,10 @@ const steps = [
     label: "Sort",
     title: "Sort your values",
     description:
-      "Drag each value into the category that best matches how important it feels to you right now.",
+      "Review each value one at a time. Swipe left or click No if it is not important. Swipe right or click Yes to choose its importance level.",
   },
   {
     id: 2,
-    label: "Top 10",
-    title: "Narrow to your Top 10",
-    description:
-      "Review your Important and Very Important values, then drag your strongest choices into Top 10.",
-  },
-  {
-    id: 3,
-    label: "Top 5",
-    title: "Choose your Top 5",
-    description:
-      "From your Top 10, choose the five values that feel most essential.",
-  },
-  {
-    id: 4,
     label: "Reflect",
     title: "Reflect and export",
     description:
@@ -113,177 +444,14 @@ const steps = [
   },
 ];
 
-function findColumnByItemId(columns, itemId) {
-  return Object.keys(columns).find((columnId) =>
-    columns[columnId].some((item) => item.id === itemId)
-  );
-}
+function removeItemFromAllColumns(columns, itemId) {
+  const updated = {};
 
-function getItemById(columns, itemId) {
-  for (const items of Object.values(columns)) {
-    const found = items.find((item) => item.id === itemId);
-    if (found) return found;
+  for (const [columnId, items] of Object.entries(columns)) {
+    updated[columnId] = items.filter((item) => item.id !== itemId);
   }
 
-  return null;
-}
-
-function canDropIntoColumn(columns, columnId, itemId) {
-  const limit = columnMeta[columnId]?.limit;
-
-  if (!limit) return true;
-
-  const alreadyInColumn = columns[columnId].some((item) => item.id === itemId);
-
-  if (alreadyInColumn) return true;
-
-  return columns[columnId].length < limit;
-}
-
-function SortableValueCard({ item, muted = false, removeMode = false, onRemove }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: item.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={[
-        "value-card",
-        muted ? "value-card-muted" : "",
-        isDragging ? "value-card-dragging" : "",
-        removeMode ? "value-card-remove-mode" : "",
-      ].join(" ")}
-      {...attributes}
-      {...(!removeMode ? listeners : {})}
-    >
-      <span className="value-card-label">{item.label}</span>
-      {removeMode && (
-        <button
-          type="button"
-          className="remove-badge"
-          aria-label={`Remove ${item.label}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(item.id);
-          }}
-        >
-          <X size={12} strokeWidth={3} />
-        </button>
-      )}
-    </div>
-  );
-}
-
-function DroppableColumn({
-  id,
-  items,
-  searchTerm,
-  allowSearchFilter = true,
-  ripple,
-  removeMode = false,
-  onRemove,
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  const columnRef = useRef(null);
-  const setRef = useCallback(
-    (node) => {
-      columnRef.current = node;
-      setNodeRef(node);
-    },
-    [setNodeRef]
-  );
-  const meta = columnMeta[id];
-
-  const visibleItems = useMemo(() => {
-    if (!allowSearchFilter || !searchTerm.trim()) return items;
-
-    return items.filter((item) =>
-      item.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [allowSearchFilter, items, searchTerm]);
-
-  const isLimited = Boolean(meta.limit);
-  const isFull = isLimited && items.length >= meta.limit;
-
-  let ripplePos = null;
-  if (ripple?.id === id && columnRef.current) {
-    const rect = columnRef.current.getBoundingClientRect();
-    ripplePos = { x: ripple.x - rect.left, y: ripple.y - rect.top };
-  }
-
-  return (
-    <section
-      ref={setRef}
-      className={[
-        "drop-column",
-        isOver ? "drop-column-over" : "",
-        isFull ? "drop-column-full" : "",
-      ].join(" ")}
-    >
-      {ripplePos && (
-        <div className="ripple-container" key={ripple.key}>
-          <span className="ripple-ring" style={{ left: ripplePos.x, top: ripplePos.y }} />
-          <span className="ripple-ring" style={{ left: ripplePos.x, top: ripplePos.y }} />
-          <span className="ripple-ring" style={{ left: ripplePos.x, top: ripplePos.y }} />
-        </div>
-      )}
-      <div className="column-header">
-        <div>
-          <h3>{meta.title}</h3>
-          <p>{meta.description}</p>
-        </div>
-
-        <div className="count-pill">
-          {items.length}
-          {meta.limit ? `/${meta.limit}` : ""}
-        </div>
-      </div>
-
-      <SortableContext
-        items={items.map((item) => item.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="card-stack">
-          {visibleItems.map((item) => (
-            <SortableValueCard
-              key={item.id}
-              item={item}
-              removeMode={removeMode}
-              onRemove={onRemove}
-            />
-          ))}
-
-          {visibleItems.length === 0 && (
-            <div className="empty-state">
-              {searchTerm && allowSearchFilter
-                ? "No matching values here."
-                : "Drop values here."}
-            </div>
-          )}
-        </div>
-      </SortableContext>
-
-      {isFull && (
-        <p className="limit-note">
-          This section is full. Move one value out before adding another.
-        </p>
-      )}
-    </section>
-  );
+  return updated;
 }
 
 function StepIndicator({ currentStep, setCurrentStep }) {
@@ -310,16 +478,338 @@ function StepIndicator({ currentStep, setCurrentStep }) {
   );
 }
 
+function SmallValueCard({
+  item,
+  onRemove,
+  selected = false,
+  onClick,
+  disabled = false,
+}) {
+  return (
+    <button
+      type="button"
+      className={[
+        "small-value-card",
+        selected ? "small-value-card-selected" : "",
+        disabled ? "small-value-card-disabled" : "",
+      ].join(" ")}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      <span>{item.label}</span>
+
+      {selected && (
+        <span className="selected-badge">
+          <Check size={14} strokeWidth={3} />
+        </span>
+      )}
+
+      {onRemove && (
+        <span
+          className="remove-badge"
+          role="button"
+          tabIndex={0}
+          aria-label={`Remove ${item.label}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(item.id);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              onRemove(item.id);
+            }
+          }}
+        >
+          <X size={12} strokeWidth={3} />
+        </span>
+      )}
+    </button>
+  );
+}
+
+function ValueColumn({ id, items, searchTerm, removeMode, onRemove }) {
+  const meta = columnMeta[id];
+
+  const visibleItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+
+    return items.filter((item) =>
+      item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [items, searchTerm]);
+
+  return (
+    <section className="drop-column">
+      <div className="column-header">
+        <div>
+          <h3>{meta.title}</h3>
+          <p>{meta.description}</p>
+        </div>
+
+        <div className="count-pill">{items.length}</div>
+      </div>
+
+      <div className="card-stack">
+        {visibleItems.map((item) => (
+          <SmallValueCard
+            key={item.id}
+            item={item}
+            onRemove={removeMode ? onRemove : undefined}
+          />
+        ))}
+
+        {visibleItems.length === 0 && (
+          <div className="empty-state">
+            {searchTerm ? "No matching values here." : "No values here yet."}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ImportanceModal({ value, onClose, onChoose }) {
+  if (!value) return null;
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="importance-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="importance-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="modal-close-button"
+          aria-label="Close modal"
+          onClick={onClose}
+        >
+          <X size={18} />
+        </button>
+
+        <p className="section-kicker">Choose importance</p>
+
+        <h2 id="importance-modal-title">{value.label}</h2>
+
+        <p>{value.description}</p>
+
+        <div className="importance-options">
+          <button
+            type="button"
+            className="importance-option somewhat-option"
+            onClick={() => onChoose("somewhatImportant")}
+          >
+            <span>Somewhat Important</span>
+            <small>It matters, but is not central.</small>
+          </button>
+
+          <button
+            type="button"
+            className="importance-option important-option"
+            onClick={() => onChoose("important")}
+          >
+            <span>Important</span>
+            <small>It meaningfully guides your choices.</small>
+          </button>
+
+          <button
+            type="button"
+            className="importance-option very-important-option"
+            onClick={() => onChoose("veryImportant")}
+          >
+            <span>Very Important</span>
+            <small>It feels essential to who you are.</small>
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SwipeDeck({
+  currentValue,
+  remainingCount,
+  totalCount,
+  onNo,
+  onYes,
+  searchTerm,
+  animatingDirection,
+  isDecisionLocked,
+}) {
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const pointerStart = useRef(null);
+
+  const rotate = Math.max(Math.min(dragOffset.x / 16, 16), -16);
+  const decisionHint =
+    dragOffset.x > 70 ? "yes" : dragOffset.x < -70 ? "no" : null;
+
+  function handlePointerDown(event) {
+    if (!currentValue || isDecisionLocked || animatingDirection) return;
+
+    pointerStart.current = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function handlePointerMove(event) {
+    if (!pointerStart.current || !isDragging || isDecisionLocked) return;
+
+    setDragOffset({
+      x: event.clientX - pointerStart.current.x,
+      y: event.clientY - pointerStart.current.y,
+    });
+  }
+
+  function handlePointerUp() {
+    if (!pointerStart.current || isDecisionLocked) return;
+
+    const finalX = dragOffset.x;
+
+    pointerStart.current = null;
+    setIsDragging(false);
+
+    if (finalX <= -120) {
+      onNo();
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
+    if (finalX >= 120) {
+      onYes();
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
+    setDragOffset({ x: 0, y: 0 });
+  }
+
+  if (!currentValue) {
+    return (
+      <section className="swipe-feature">
+        <div className="deck-empty-state">
+          <CheckCircle2 size={48} />
+          <h3>
+            {searchTerm
+              ? "No values match your search."
+              : "You reviewed every value."}
+          </h3>
+          <p>
+            {searchTerm
+              ? "Clear your search to continue reviewing the full value deck."
+              : "Move to Step 2 when you are ready to reflect on your values."}
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="swipe-feature">
+      <div className="deck-status-row">
+        <span>
+          {remainingCount} value{remainingCount === 1 ? "" : "s"} left
+        </span>
+
+        <span>
+          {Math.max(totalCount - remainingCount + 1, 1)} / {totalCount || 1}
+        </span>
+      </div>
+
+      <div className="dating-phone-frame">
+        <div className="swipe-card-stage">
+          <div className="swipe-card swipe-card-back swipe-card-back-three" />
+          <div className="swipe-card swipe-card-back swipe-card-back-two" />
+          <div className="swipe-card swipe-card-back" />
+
+          <article
+            className={[
+              "swipe-card",
+              "active-swipe-card",
+              isDragging ? "active-swipe-card-dragging" : "",
+              decisionHint === "yes" ? "swipe-card-yes" : "",
+              decisionHint === "no" ? "swipe-card-no" : "",
+              animatingDirection === "yes" ? "swipe-card-exit-right" : "",
+              animatingDirection === "no" ? "swipe-card-exit-left" : "",
+            ].join(" ")}
+            style={{
+              transform:
+                animatingDirection || !isDragging
+                  ? undefined
+                  : `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotate}deg)`,
+            }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <div className="swipe-decision swipe-decision-no">Nope</div>
+            <div className="swipe-decision swipe-decision-yes">Yes</div>
+
+            <div className="dating-card-glow" />
+
+            <p className="section-kicker">Current value</p>
+
+            <h3
+              className={[
+                "value-title",
+                getValueLengthClass(currentValue.label),
+              ].join(" ")}
+              title={currentValue.label}
+            >
+              {currentValue.label}
+            </h3>
+
+            <p>{currentValue.description}</p>
+          </article>
+        </div>
+      </div>
+
+      <div className="swipe-actions dating-actions">
+        <button
+          type="button"
+          className="no-button dating-action-button"
+          onClick={onNo}
+          disabled={isDecisionLocked}
+          aria-label="Mark as not important"
+        >
+          <X size={30} />
+        </button>
+
+        <button
+          type="button"
+          className="yes-button dating-action-button"
+          onClick={onYes}
+          disabled={isDecisionLocked}
+          aria-label="Mark as important"
+        >
+          <Check size={30} />
+        </button>
+      </div>
+
+      <p className="swipe-help">Swipe left for No. Swipe right for Yes.</p>
+    </section>
+  );
+}
+
 function App() {
   const [columns, setColumns] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
 
-    if (!saved) return initialColumns;
+    if (!saved) return createInitialColumns();
 
     try {
-      return JSON.parse(saved).columns || initialColumns;
+      return JSON.parse(saved).columns || createInitialColumns();
     } catch {
-      return initialColumns;
+      return createInitialColumns();
     }
   });
 
@@ -337,11 +827,11 @@ function App() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [customValue, setCustomValue] = useState("");
-  const [activeId, setActiveId] = useState(null);
-  const [ripple, setRipple] = useState(null);
   const [removeMode, setRemoveMode] = useState(false);
-  const lastPointer = useRef({ x: 0, y: 0 });
-  const rippleTimeout = useRef(null);
+  const [pendingImportanceValue, setPendingImportanceValue] = useState(null);
+  const [animatingDirection, setAnimatingDirection] = useState(null);
+  const [isDecisionLocked, setIsDecisionLocked] = useState(false);
+
   const [reflection, setReflection] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
 
@@ -354,35 +844,17 @@ function App() {
     }
   });
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 150,
-        tolerance: 5,
-      },
-    })
-  );
+  const currentStepData = steps.find((step) => step.id === currentStep);
 
-  const activeItem = activeId ? getItemById(columns, activeId) : null;
+  const filteredAvailableValues = useMemo(() => {
+    if (!searchTerm.trim()) return columns.available;
 
-  const totalValues = Object.values(columns).reduce(
-    (total, list) => total + list.length,
-    0
-  );
+    return columns.available.filter((item) =>
+      item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [columns.available, searchTerm]);
 
-  const sortedCount =
-    columns.notImportant.length +
-    columns.somewhatImportant.length +
-    columns.important.length +
-    columns.veryImportant.length;
-
-  const sortProgress =
-    totalValues > 0 ? Math.round((sortedCount / totalValues) * 100) : 0;
+  const currentValue = filteredAvailableValues[0] || null;
 
   useEffect(() => {
     localStorage.setItem(
@@ -395,97 +867,56 @@ function App() {
     );
   }, [columns, currentStep, reflection]);
 
-  useEffect(() => {
-    const track = (e) => {
-      lastPointer.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener("pointermove", track);
-    return () => window.removeEventListener("pointermove", track);
-  }, []);
-
-  function handleDragStart(event) {
-    setActiveId(event.active.id);
-  }
-
-  function handleDragEnd(event) {
-    const { active, over } = event;
-
-    setActiveId(null);
-
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    const fromColumn = findColumnByItemId(columns, activeId);
-    const toColumn =
-      columns[overId] !== undefined ? overId : findColumnByItemId(columns, overId);
-
-    if (!fromColumn || !toColumn) return;
-
-    if (!canDropIntoColumn(columns, toColumn, activeId)) return;
-
-    if (fromColumn === toColumn) {
-      const oldIndex = columns[fromColumn].findIndex(
-        (item) => item.id === activeId
-      );
-      const newIndex = columns[toColumn].findIndex((item) => item.id === overId);
-
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      setColumns((previous) => ({
-        ...previous,
-        [fromColumn]: arrayMove(previous[fromColumn], oldIndex, newIndex),
-      }));
-
-      return;
-    }
-
+  function moveValueToColumn(item, columnId) {
     setColumns((previous) => {
-      const movingItem = previous[fromColumn].find(
-        (item) => item.id === activeId
-      );
-
-      if (!movingItem) return previous;
-
-      const nextFrom = previous[fromColumn].filter(
-        (item) => item.id !== activeId
-      );
-      const nextTo = [...previous[toColumn]];
-
-      const overIndex = nextTo.findIndex((item) => item.id === overId);
-
-      if (overIndex >= 0) {
-        nextTo.splice(overIndex, 0, movingItem);
-      } else {
-        nextTo.push(movingItem);
-      }
+      const cleanedColumns = removeItemFromAllColumns(previous, item.id);
 
       return {
-        ...previous,
-        [fromColumn]: nextFrom,
-        [toColumn]: nextTo,
+        ...cleanedColumns,
+        [columnId]: [...cleanedColumns[columnId], item],
       };
     });
+  }
 
-    clearTimeout(rippleTimeout.current);
-    setRipple({
-      id: toColumn,
-      x: lastPointer.current.x,
-      y: lastPointer.current.y,
-      key: Date.now(),
-    });
-    rippleTimeout.current = setTimeout(() => setRipple(null), 1100);
+  function handleNo() {
+    if (!currentValue || isDecisionLocked) return;
+
+    const valueToMove = currentValue;
+
+    setIsDecisionLocked(true);
+    setAnimatingDirection("no");
+
+    window.setTimeout(() => {
+      moveValueToColumn(valueToMove, "notImportant");
+      setAnimatingDirection(null);
+      setIsDecisionLocked(false);
+    }, 380);
+  }
+
+  function handleYes() {
+    if (!currentValue || isDecisionLocked) return;
+
+    const valueToReview = currentValue;
+
+    setIsDecisionLocked(true);
+    setAnimatingDirection("yes");
+
+    window.setTimeout(() => {
+      setPendingImportanceValue(valueToReview);
+      setAnimatingDirection(null);
+      setIsDecisionLocked(false);
+    }, 380);
+  }
+
+  function handleChooseImportance(columnId) {
+    if (!pendingImportanceValue) return;
+
+    moveValueToColumn(pendingImportanceValue, columnId);
+    setPendingImportanceValue(null);
   }
 
   function removeValue(itemId) {
-    setColumns((previous) => {
-      const updated = {};
-      for (const [colId, items] of Object.entries(previous)) {
-        updated[colId] = items.filter((item) => item.id !== itemId);
-      }
-      return updated;
-    });
+    setColumns((previous) => removeItemFromAllColumns(previous, itemId));
   }
 
   function addCustomValue() {
@@ -518,27 +949,56 @@ function App() {
     if (!confirmed) return;
 
     localStorage.removeItem(STORAGE_KEY);
-    setColumns(initialColumns);
+    setColumns(createInitialColumns());
     setReflection("");
     setSearchTerm("");
     setCustomValue("");
+    setRemoveMode(false);
+    setPendingImportanceValue(null);
+    setAnimatingDirection(null);
+    setIsDecisionLocked(false);
     setCurrentStep(1);
   }
 
   function exportResults() {
-    const top5 = columns.top5.map((item, index) => `${index + 1}. ${item.label}`);
-    const top10 = columns.top10.map(
-      (item, index) => `${index + 1}. ${item.label}`
-    );
-
     const content = `
 Values Sort Exercise Results
 
-Top 5 Core Values
-${top5.length ? top5.join("\n") : "No Top 5 values selected yet."}
+Very Important
+${
+  columns.veryImportant.length
+    ? columns.veryImportant
+        .map((item) => `- ${item.label}: ${item.description}`)
+        .join("\n")
+    : "None selected."
+}
 
-Top 10 Values
-${top10.length ? top10.join("\n") : "No Top 10 values selected yet."}
+Important
+${
+  columns.important.length
+    ? columns.important
+        .map((item) => `- ${item.label}: ${item.description}`)
+        .join("\n")
+    : "None selected."
+}
+
+Somewhat Important
+${
+  columns.somewhatImportant.length
+    ? columns.somewhatImportant
+        .map((item) => `- ${item.label}: ${item.description}`)
+        .join("\n")
+    : "None selected."
+}
+
+Not Important
+${
+  columns.notImportant.length
+    ? columns.notImportant
+        .map((item) => `- ${item.label}: ${item.description}`)
+        .join("\n")
+    : "None selected."
+}
 
 Reflection
 ${reflection || "No reflection added yet."}
@@ -558,8 +1018,6 @@ ${reflection || "No reflection added yet."}
     URL.revokeObjectURL(url);
   }
 
-  const currentStepData = steps.find((step) => step.id === currentStep);
-
   return (
     <main className="app-shell">
       <section className="hero-section">
@@ -572,15 +1030,15 @@ ${reflection || "No reflection added yet."}
           <h1>Discover the values that guide your choices.</h1>
 
           <p>
-            Sort, narrow, and reflect on the values that matter most to you.
-            Your progress saves automatically in this browser.
+            Sort and reflect on the values that matter most to you. Your
+            progress saves automatically in this browser.
           </p>
 
           <div className="hero-actions">
             <button
               type="button"
               className="primary-button"
-              onClick={() => setCurrentStep(Math.min(currentStep + 1, 4))}
+              onClick={() => setCurrentStep(Math.min(currentStep + 1, 2))}
             >
               Continue Exercise
               <ArrowRight size={18} />
@@ -590,37 +1048,6 @@ ${reflection || "No reflection added yet."}
               <RefreshCcw size={18} />
               Reset
             </button>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div
-            className="progress-track"
-            style={{ "--progress": `${sortProgress}%` }}
-          >
-            <div className="progress-fill" />
-          </div>
-
-          <div className="summary-stats">
-            <p className="summary-label">Progress</p>
-            <strong>{sortProgress}%</strong>
-
-            <div className="summary-grid">
-              <div>
-                <span>{sortedCount}</span>
-                <small>Sorted</small>
-              </div>
-
-              <div>
-                <span>{columns.top10.length}/10</span>
-                <small>Top 10</small>
-              </div>
-
-              <div>
-                <span>{columns.top5.length}/5</span>
-                <small>Top 5</small>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -635,43 +1062,51 @@ ${reflection || "No reflection added yet."}
         </div>
 
         <div className="tool-row">
-          <div className="search-box">
-            <Search size={18} />
+          {currentStep === 1 && (
+            <>
+              <div className="search-box">
+                <Search size={18} />
 
-            <input
-              type="text"
-              placeholder="Search values..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
+                <input
+                  type="text"
+                  placeholder="Search value deck..."
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                />
 
-            {searchTerm && (
-              <button type="button" onClick={() => setSearchTerm("")}>
-                <X size={16} />
-              </button>
-            )}
-          </div>
+                {searchTerm && (
+                  <button type="button" onClick={() => setSearchTerm("")}>
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
 
-          <div className="add-box">
-            <input
-              type="text"
-              placeholder="Add custom value"
-              value={customValue}
-              onChange={(event) => setCustomValue(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") addCustomValue();
-              }}
-            />
+              <div className="add-box">
+                <input
+                  type="text"
+                  placeholder="Add custom value"
+                  value={customValue}
+                  onChange={(event) => setCustomValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") addCustomValue();
+                  }}
+                />
 
-            <button type="button" onClick={addCustomValue}>
-              <Plus size={18} />
-            </button>
-          </div>
+                <button type="button" onClick={addCustomValue}>
+                  <Plus size={18} />
+                </button>
+              </div>
+            </>
+          )}
 
           <button
             type="button"
-            className={removeMode ? "remove-mode-button remove-mode-button-active" : "remove-mode-button"}
-            onClick={() => setRemoveMode((v) => !v)}
+            className={
+              removeMode
+                ? "remove-mode-button remove-mode-button-active"
+                : "remove-mode-button"
+            }
+            onClick={() => setRemoveMode((value) => !value)}
             aria-label={removeMode ? "Done removing" : "Remove values"}
             title={removeMode ? "Done" : "Remove values"}
           >
@@ -681,142 +1116,94 @@ ${reflection || "No reflection added yet."}
         </div>
       </section>
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {currentStep === 1 && (
-          <section className="board board-sort">
-            <DroppableColumn
-              id="available"
-              items={columns.available}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
+      {currentStep === 1 && (
+        <section className="sort-stage">
+          <SwipeDeck
+            currentValue={currentValue}
+            remainingCount={filteredAvailableValues.length}
+            totalCount={columns.available.length}
+            onNo={handleNo}
+            onYes={handleYes}
+            searchTerm={searchTerm}
+            animatingDirection={animatingDirection}
+            isDecisionLocked={isDecisionLocked}
+          />
 
-            <DroppableColumn
-              id="veryImportant"
-              items={columns.veryImportant}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
+          <section className="importance-results-section">
+            <div className="importance-results-header">
+              <p className="section-kicker">Your selections</p>
+              <h2>Sorted Values</h2>
+              <p>
+                As you swipe, each value will appear below in its selected
+                importance category.
+              </p>
+            </div>
 
-            <DroppableColumn
-              id="important"
-              items={columns.important}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
+            <section className="importance-results-grid">
+              <ValueColumn
+                id="veryImportant"
+                items={columns.veryImportant}
+                searchTerm=""
+                removeMode={removeMode}
+                onRemove={removeValue}
+              />
 
-            <DroppableColumn
-              id="somewhatImportant"
-              items={columns.somewhatImportant}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
+              <ValueColumn
+                id="important"
+                items={columns.important}
+                searchTerm=""
+                removeMode={removeMode}
+                onRemove={removeValue}
+              />
 
-            <DroppableColumn
-              id="notImportant"
-              items={columns.notImportant}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
+              <ValueColumn
+                id="somewhatImportant"
+                items={columns.somewhatImportant}
+                searchTerm=""
+                removeMode={removeMode}
+                onRemove={removeValue}
+              />
+
+              <ValueColumn
+                id="notImportant"
+                items={columns.notImportant}
+                searchTerm=""
+                removeMode={removeMode}
+                onRemove={removeValue}
+              />
+            </section>
           </section>
-        )}
+        </section>
+      )}
 
-        {currentStep === 2 && (
-          <section className="board board-focus">
-            <DroppableColumn
-              id="important"
-              items={columns.important}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
-
-            <DroppableColumn
-              id="veryImportant"
-              items={columns.veryImportant}
-              searchTerm={searchTerm}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
-
-            <DroppableColumn
-              id="top10"
-              items={columns.top10}
-              searchTerm={searchTerm}
-              allowSearchFilter={false}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
-          </section>
-        )}
-
-        {currentStep === 3 && (
-          <section className="board board-focus">
-            <DroppableColumn
-              id="top10"
-              items={columns.top10}
-              searchTerm={searchTerm}
-              allowSearchFilter={false}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
-
-            <DroppableColumn
-              id="top5"
-              items={columns.top5}
-              searchTerm={searchTerm}
-              allowSearchFilter={false}
-              ripple={ripple}
-              removeMode={removeMode}
-              onRemove={removeValue}
-            />
-          </section>
-        )}
-
-        <DragOverlay>
-          {activeItem ? <SortableValueCard item={activeItem} muted /> : null}
-        </DragOverlay>
-      </DndContext>
-
-      {currentStep === 4 && (
+      {currentStep === 2 && (
         <section className="reflection-layout">
           <div className="results-card">
             <p className="section-kicker">Your result</p>
-            <h2>Top 5 Core Values</h2>
+            <h2>Very Important Values</h2>
 
-            {columns.top5.length > 0 ? (
+            {columns.veryImportant.length > 0 ? (
               <ol className="results-list">
-                {columns.top5.map((item) => (
-                  <li key={item.id}>{item.label}</li>
+                {columns.veryImportant.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.label}</strong>
+                    <span>{item.description}</span>
+                  </li>
                 ))}
               </ol>
             ) : (
               <p className="empty-results">
-                You have not selected your Top 5 yet. Go back to Step 3 to
-                finish.
+                No values marked Very Important yet. Go back to Step 1 to sort
+                your values.
               </p>
             )}
 
             <div className="export-actions">
-              <button type="button" className="primary-button" onClick={exportResults}>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={exportResults}
+              >
                 <Download size={18} />
                 Export Text
               </button>
@@ -858,19 +1245,26 @@ ${reflection || "No reflection added yet."}
           disabled={currentStep === 1}
           onClick={() => setCurrentStep(Math.max(currentStep - 1, 1))}
         >
+          <ArrowLeft size={18} />
           Previous
         </button>
 
         <button
           type="button"
           className="primary-button"
-          disabled={currentStep === 4}
-          onClick={() => setCurrentStep(Math.min(currentStep + 1, 4))}
+          disabled={currentStep === 2}
+          onClick={() => setCurrentStep(Math.min(currentStep + 1, 2))}
         >
           Next Step
           <ArrowRight size={18} />
         </button>
       </footer>
+
+      <ImportanceModal
+        value={pendingImportanceValue}
+        onClose={() => setPendingImportanceValue(null)}
+        onChoose={handleChooseImportance}
+      />
     </main>
   );
 }
